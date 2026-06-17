@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'eclipse'
     id 'idea'
-    id 'net.neoforged.moddev' version '2.0.28-beta'
+    id 'net.neoforged.moddev' version '2.0.141'
 }
 
 version = mod_version
@@ -40,7 +40,7 @@ neoForge {
 }
 
 dependencies {
-    // NeoForge wordt automatisch toegevoegd via de plugin
+    // NeoForge is added automatically by the plugin
 }
 
 tasks.withType(ProcessResources).configureEach {

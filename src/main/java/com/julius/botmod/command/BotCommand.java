@@ -19,7 +19,7 @@ public class BotCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("bot")
-                .requires(source -> source.hasPermission(2)) // requires OP level 2
+                .requires(source -> source.hasPermission(0))
 
                 // /bot spawn <name>
                 .then(Commands.literal("spawn")
