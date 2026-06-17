@@ -1,38 +1,29 @@
 package com.julius.botmod.bot;
 
 import com.julius.botmod.BotMod;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.common.util.FakePlayerFactory;
 
 import java.util.*;
 
 public class BotManager {
 
-    public record BotEntry(String name, FakePlayer player, ServerLevel level, int chunkX, int chunkZ) {}
+    public record BotEntry(String name, ArmorStand marker, ServerLevel level, int chunkX, int chunkZ) {}
 
     private static final Map<String, BotEntry> activeBots = new HashMap<>();
 
     /**
-     * Spawns a FakePlayer bot at the given position and force-loads the chunk.
+     * Spawns a visible marker at the given position and force-loads the chunk.
      *
      * @return true if the bot was successfully spawned, false if the name is already in use
      */
-    public static boolean spawnBot(String name, ServerLevel level, Vec3 pos, float yRot, float xRot) {
+    public static boolean spawnBot(String name, ServerLevel level, Vec3 pos, float yRot) {
         if (activeBots.containsKey(name)) {
             return false;
         }
-
-        // Minecraft enforces a 16-character limit on player names
-        String profileName = name.length() > 16 ? name.substring(0, 16) : name;
-        GameProfile profile = new GameProfile(UUID.randomUUID(), profileName);
-        FakePlayer bot = FakePlayerFactory.get(level, profile);
-        bot.setPos(pos.x, pos.y, pos.z);
-        bot.setYRot(yRot);
-        bot.setXRot(xRot);
 
         int cx = BlockPos.containing(pos).getX() >> 4;
         int cz = BlockPos.containing(pos).getZ() >> 4;
@@ -40,9 +31,17 @@ public class BotManager {
         // Force the chunk to stay loaded even without real players nearby
         level.setChunkForced(cx, cz, true);
 
-        level.addFreshEntity(bot);
+        // Spawn an armor stand as a visible marker for the bot position
+        ArmorStand marker = new ArmorStand(level, pos.x, pos.y, pos.z);
+        marker.setCustomName(Component.literal("[Bot] " + name));
+        marker.setCustomNameVisible(true);
+        marker.setInvulnerable(true);
+        marker.setNoGravity(true);
+        marker.setShowArms(true);
+        marker.setYRot(yRot);
+        level.addFreshEntity(marker);
 
-        activeBots.put(name, new BotEntry(name, bot, level, cx, cz));
+        activeBots.put(name, new BotEntry(name, marker, level, cx, cz));
         BotMod.LOGGER.info("Bot '{}' spawned at ({}, {}, {})", name, (int) pos.x, (int) pos.y, (int) pos.z);
         return true;
     }
@@ -60,8 +59,8 @@ public class BotManager {
 
         entry.level().setChunkForced(entry.chunkX(), entry.chunkZ(), false);
 
-        if (!entry.player().isRemoved()) {
-            entry.player().discard();
+        if (!entry.marker().isRemoved()) {
+            entry.marker().discard();
         }
 
         BotMod.LOGGER.info("Bot '{}' removed", name);
