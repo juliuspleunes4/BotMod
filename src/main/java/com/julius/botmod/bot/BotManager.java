@@ -2,9 +2,16 @@ package com.julius.botmod.bot;
 
 import com.julius.botmod.BotMod;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
@@ -20,7 +27,7 @@ public class BotManager {
      *
      * @return true if the bot was successfully spawned, false if the name is already in use
      */
-    public static boolean spawnBot(String name, ServerLevel level, Vec3 pos, float yRot) {
+    public static boolean spawnBot(String name, ServerLevel level, Vec3 pos, float yRot, ServerPlayer owner) {
         if (activeBots.containsKey(name)) {
             return false;
         }
@@ -31,7 +38,6 @@ public class BotManager {
         // Force the chunk to stay loaded even without real players nearby
         level.setChunkForced(cx, cz, true);
 
-        // Spawn an armor stand as a visible marker for the bot position
         ArmorStand marker = new ArmorStand(level, pos.x, pos.y, pos.z);
         marker.setCustomName(Component.literal("[Bot] " + name));
         marker.setCustomNameVisible(true);
@@ -39,6 +45,12 @@ public class BotManager {
         marker.setNoGravity(true);
         marker.setShowArms(true);
         marker.setYRot(yRot);
+
+        // Put the owner's player head on the armor stand
+        ItemStack head = new ItemStack(Items.PLAYER_HEAD);
+        head.set(DataComponents.PROFILE, new ResolvableProfile(owner.getGameProfile()));
+        marker.setItemSlot(EquipmentSlot.HEAD, head);
+
         level.addFreshEntity(marker);
 
         activeBots.put(name, new BotEntry(name, marker, level, cx, cz));
@@ -65,6 +77,10 @@ public class BotManager {
 
         BotMod.LOGGER.info("Bot '{}' removed", name);
         return true;
+    }
+
+    public static boolean isMarker(Entity entity) {
+        return activeBots.values().stream().anyMatch(e -> e.marker() == entity);
     }
 
     public static Set<String> getBotNames() {

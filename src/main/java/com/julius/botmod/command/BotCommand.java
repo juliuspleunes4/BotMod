@@ -61,7 +61,7 @@ public class BotCommand {
         ServerLevel level = source.getLevel();
         Vec3 pos = player.position();
 
-        boolean success = BotManager.spawnBot(name, level, pos, player.getYRot());
+        boolean success = BotManager.spawnBot(name, level, pos, player.getYRot(), player);
 
         if (success) {
             source.sendSuccess(() -> Component.literal(
