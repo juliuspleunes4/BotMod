@@ -19,25 +19,25 @@ public class BotCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("bot")
-                .requires(source -> source.hasPermission(2)) // OP-niveau 2 vereist
+                .requires(source -> source.hasPermission(2)) // requires OP level 2
 
-                // /bot spawn <naam>
+                // /bot spawn <name>
                 .then(Commands.literal("spawn")
-                        .then(Commands.argument("naam", StringArgumentType.word())
+                        .then(Commands.argument("name", StringArgumentType.word())
                                 .executes(ctx -> spawnBot(
                                         ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "naam")
+                                        StringArgumentType.getString(ctx, "name")
                                 ))
                         )
                 )
 
-                // /bot remove <naam>
+                // /bot remove <name>
                 .then(Commands.literal("remove")
-                        .then(Commands.argument("naam", StringArgumentType.word())
+                        .then(Commands.argument("name", StringArgumentType.word())
                                 .suggests(BOT_NAMES)
                                 .executes(ctx -> removeBot(
                                         ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "naam")
+                                        StringArgumentType.getString(ctx, "name")
                                 ))
                         )
                 )
@@ -49,50 +49,50 @@ public class BotCommand {
         );
     }
 
-    private static int spawnBot(CommandSourceStack source, String naam) {
+    private static int spawnBot(CommandSourceStack source, String name) {
         ServerPlayer player;
         try {
             player = source.getPlayerOrException();
         } catch (Exception e) {
-            source.sendFailure(Component.literal("/bot spawn kan alleen door een speler worden uitgevoerd."));
+            source.sendFailure(Component.literal("/bot spawn can only be executed by a player."));
             return 0;
         }
 
         ServerLevel level = source.getLevel();
         Vec3 pos = player.position();
 
-        boolean success = BotManager.spawnBot(naam, level, pos, player.getYRot(), player.getXRot());
+        boolean success = BotManager.spawnBot(name, level, pos, player.getYRot(), player.getXRot());
 
         if (success) {
             source.sendSuccess(() -> Component.literal(
-                    "Bot '" + naam + "' gespawned op " +
+                    "Bot '" + name + "' spawned at " +
                     (int) pos.x + ", " + (int) pos.y + ", " + (int) pos.z + "."
             ), true);
         } else {
-            source.sendFailure(Component.literal("Er bestaat al een bot met de naam '" + naam + "'."));
+            source.sendFailure(Component.literal("A bot with the name '" + name + "' already exists."));
         }
         return success ? 1 : 0;
     }
 
-    private static int removeBot(CommandSourceStack source, String naam) {
-        boolean success = BotManager.removeBot(naam);
+    private static int removeBot(CommandSourceStack source, String name) {
+        boolean success = BotManager.removeBot(name);
 
         if (success) {
-            source.sendSuccess(() -> Component.literal("Bot '" + naam + "' verwijderd."), true);
+            source.sendSuccess(() -> Component.literal("Bot '" + name + "' removed."), true);
         } else {
-            source.sendFailure(Component.literal("Geen actieve bot gevonden met de naam '" + naam + "'."));
+            source.sendFailure(Component.literal("No active bot found with the name '" + name + "'."));
         }
         return success ? 1 : 0;
     }
 
     private static int listBots(CommandSourceStack source) {
-        var namen = BotManager.getBotNames();
+        var names = BotManager.getBotNames();
 
-        if (namen.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("Geen actieve bots."), false);
+        if (names.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No active bots."), false);
         } else {
             source.sendSuccess(() -> Component.literal(
-                    "Actieve bots (" + namen.size() + "): " + String.join(", ", namen)
+                    "Active bots (" + names.size() + "): " + String.join(", ", names)
             ), false);
         }
         return 1;

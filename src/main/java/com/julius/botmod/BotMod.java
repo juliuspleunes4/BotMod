@@ -26,7 +26,7 @@ public class BotMod {
     }
 
     private void onServerStopping(ServerStoppingEvent event) {
-        // Ruim alle bots op zodat geforceerde chunks worden vrijgegeven
+        // Clean up all bots to release forced chunk tickets
         BotManager.removeAll();
     }
 }

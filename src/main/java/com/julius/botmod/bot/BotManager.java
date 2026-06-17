@@ -17,16 +17,16 @@ public class BotManager {
     private static final Map<String, BotEntry> activeBots = new HashMap<>();
 
     /**
-     * Spawnt een FakePlayer-bot op de opgegeven positie en laadt de chunk geforceerd.
+     * Spawns a FakePlayer bot at the given position and force-loads the chunk.
      *
-     * @return true als de bot succesvol gespawned is, false als de naam al in gebruik is
+     * @return true if the bot was successfully spawned, false if the name is already in use
      */
     public static boolean spawnBot(String name, ServerLevel level, Vec3 pos, float yRot, float xRot) {
         if (activeBots.containsKey(name)) {
             return false;
         }
 
-        // Minecraft staat max 16 tekens toe voor spelersnamen
+        // Minecraft enforces a 16-character limit on player names
         String profileName = name.length() > 16 ? name.substring(0, 16) : name;
         GameProfile profile = new GameProfile(UUID.randomUUID(), profileName);
         FakePlayer bot = FakePlayerFactory.get(level, profile);
@@ -37,20 +37,20 @@ public class BotManager {
         int cx = BlockPos.containing(pos).getX() >> 4;
         int cz = BlockPos.containing(pos).getZ() >> 4;
 
-        // Forceer de chunk zodat die geladen blijft ook zonder echte spelers
+        // Force the chunk to stay loaded even without real players nearby
         level.setChunkForced(cx, cz, true);
 
         level.addFreshEntity(bot);
 
         activeBots.put(name, new BotEntry(name, bot, level, cx, cz));
-        BotMod.LOGGER.info("Bot '{}' gespawned op ({}, {}, {})", name, (int) pos.x, (int) pos.y, (int) pos.z);
+        BotMod.LOGGER.info("Bot '{}' spawned at ({}, {}, {})", name, (int) pos.x, (int) pos.y, (int) pos.z);
         return true;
     }
 
     /**
-     * Verwijdert een bestaande bot en ontlast de geforceerde chunk.
+     * Removes an existing bot and releases the forced chunk ticket.
      *
-     * @return true als de bot gevonden en verwijderd is
+     * @return true if the bot was found and removed
      */
     public static boolean removeBot(String name) {
         BotEntry entry = activeBots.remove(name);
@@ -64,7 +64,7 @@ public class BotManager {
             entry.player().discard();
         }
 
-        BotMod.LOGGER.info("Bot '{}' verwijderd", name);
+        BotMod.LOGGER.info("Bot '{}' removed", name);
         return true;
     }
 
@@ -76,7 +76,7 @@ public class BotManager {
         return activeBots.containsKey(name);
     }
 
-    /** Verwijdert alle actieve bots — aangeroepen bij server shutdown. */
+    /** Removes all active bots — called on server shutdown. */
     public static void removeAll() {
         new HashSet<>(activeBots.keySet()).forEach(BotManager::removeBot);
     }

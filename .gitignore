@@ -1,0 +1,18 @@
+# Gradle
+.gradle/
+build/
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+bin/
+
+# NeoForge generated resources
+src/generated/resources/
+
+# OS
+Thumbs.db
+.DS_Store
