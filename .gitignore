@@ -8,6 +8,7 @@ build/
 .classpath
 .project
 .settings/
+.vscode/
 bin/
 
 # NeoForge generated resources
