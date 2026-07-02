@@ -46,6 +46,7 @@ public class BotManager {
         bot.setPos(pos.x, pos.y, pos.z);
         bot.setYRot(yRot);
         bot.setOwnerProfile(owner.getGameProfile());
+        bot.setBotName(name);
         bot.setCustomName(Component.literal("[Bot] " + name));
         bot.setCustomNameVisible(true);
 
@@ -103,8 +104,30 @@ public class BotManager {
         return activeBots.containsKey(name);
     }
 
-    /** Removes all active bots — called on server shutdown. */
-    public static void removeAll() {
-        new HashSet<>(activeBots.keySet()).forEach(BotManager::removeBot);
+    /**
+     * Re-registers a bot that survived a server restart. Its chunk was already force-loaded again
+     * by vanilla's own forced-chunk persistence before {@code ServerStartedEvent} fires, so the
+     * entity is already present in {@code level} — this just rebuilds the in-memory tracking
+     * (registry entry + FakePlayer) that {@code /bot list} and {@code /bot remove} rely on.
+     */
+    public static void reregisterBot(BotEntity bot, ServerLevel level) {
+        String name = bot.getBotName();
+        if (name.isEmpty() || activeBots.containsKey(name)) {
+            return;
+        }
+
+        BlockPos pos = bot.blockPosition();
+        int cx = pos.getX() >> 4;
+        int cz = pos.getZ() >> 4;
+
+        String fakeName = name.length() > 16 ? name.substring(0, 16) : name;
+        FakePlayer spawnSimulator = FakePlayerFactory.get(level, new GameProfile(UUID.randomUUID(), fakeName));
+        spawnSimulator.setPos(bot.getX(), bot.getY(), bot.getZ());
+        level.players().add(spawnSimulator);
+
+        level.setChunkForced(cx, cz, true);
+
+        activeBots.put(name, new BotEntry(name, bot, spawnSimulator, level, cx, cz));
+        BotMod.LOGGER.info("Bot '{}' restored after server restart at ({}, {}, {})", name, pos.getX(), pos.getY(), pos.getZ());
     }
 }

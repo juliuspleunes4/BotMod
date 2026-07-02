@@ -31,7 +31,7 @@ The bot itself is deliberately inert: no AI, no movement, invulnerable, non-push
 - Mob spawning works around the bot via fake-player injection
 - Bots are invulnerable and can't be pushed, hit, or interacted with
 - Tab-completion for bot names on removal
-- Automatic cleanup on server shutdown (forced-chunk tickets are released, no orphaned tickets left behind)
+- Bots survive a server restart — they're restored automatically on startup, no need to respawn them
 
 ## Requirements
 
@@ -46,10 +46,10 @@ The bot itself is deliberately inert: no AI, no movement, invulnerable, non-push
 
 ## Installation
 
-Download `botmod-1.0.0.jar` from the [latest release](https://github.com/juliuspleunes4/BotMod/releases/latest) and drop it into your `mods/` folder on both the client and server.
+Download `botmod-1.1.0.jar` from the [latest release](https://github.com/juliuspleunes4/BotMod/releases/latest) and drop it into your `mods/` folder on both the client and server.
 
 ```
-.minecraft/mods/botmod-1.0.0.jar
+.minecraft/mods/botmod-1.1.0.jar
 ```
 
 Alternatively, build from source (see [Building](#building-from-source)).
@@ -75,7 +75,7 @@ All commands are available to every player (permission level 0). On a multiplaye
 
 ## Notes & limitations
 
-- **Bots don't survive a restart.** On server shutdown every bot is removed and its forced-chunk ticket released. Re-spawn your bots after a restart.
+- **Bots survive a server restart.** They're normal persisted entities and their forced-chunk ticket is reinstated automatically; on startup the mod re-scans the world and rebuilds `/bot list` from what it finds.
 - **The bot is stationary.** It won't kill mobs, route items, or trigger anything that needs movement. Pair it with a conventional farm design (water streams, fall damage, hoppers, etc.).
 - **One bot per chunk anchor.** Each bot force-loads its own chunk; spawn them where the farm actually needs presence.
 - Bot names are unique per server session and capped at 16 characters internally for the fake-player profile.

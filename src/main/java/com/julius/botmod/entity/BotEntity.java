@@ -18,6 +18,9 @@ import net.minecraft.world.level.Level;
 
 public class BotEntity extends Mob {
 
+    /** The name used to register this bot in BotManager, persisted so it can be restored after a server restart. */
+    private String botName = "";
+
     private static final EntityDataAccessor<String> OWNER_NAME =
             SynchedEntityData.defineId(BotEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<String> SKIN_VALUE =
@@ -44,6 +47,14 @@ public class BotEntity extends Mob {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.0);
+    }
+
+    public void setBotName(String name) {
+        this.botName = name;
+    }
+
+    public String getBotName() {
+        return botName;
     }
 
     /** Called server-side after spawning to attach the owner's skin data. */
@@ -92,6 +103,7 @@ public class BotEntity extends Mob {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
+        tag.putString("BotName", botName);
         tag.putString("OwnerName", entityData.get(OWNER_NAME));
         tag.putString("SkinValue", entityData.get(SKIN_VALUE));
         tag.putString("SkinSignature", entityData.get(SKIN_SIGNATURE));
@@ -100,6 +112,7 @@ public class BotEntity extends Mob {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
+        botName = tag.getString("BotName");
         entityData.set(OWNER_NAME, tag.getString("OwnerName"));
         entityData.set(SKIN_VALUE, tag.getString("SkinValue"));
         entityData.set(SKIN_SIGNATURE, tag.getString("SkinSignature"));
