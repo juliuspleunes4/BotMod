@@ -26,12 +26,14 @@ The bot itself is deliberately inert: no AI, no movement, invulnerable, non-push
 ## Features
 
 - Spawn named bots that persist in the world while the server runs
-- Each bot renders with the spawning player's actual skin and a `[Bot] <name>` nametag
+- Each bot renders with the spawning player's actual skin and a `[Bot] <name>` nametag, with `[Bot]` styled in bold blue
 - Force-loaded chunks keep farms running when you're away
 - Mob spawning works around the bot via fake-player injection
 - Bots are invulnerable and can't be pushed, hit, or interacted with
 - Tab-completion for bot names on removal
 - Bots survive a server restart — they're restored automatically on startup, no need to respawn them
+- `/bot killall` clears every bot in one go, including stray ones left over from before this registry existed
+- Command feedback is styled consistently as `[BOTMOD] » message` in the chat
 
 ## Requirements
 
@@ -63,6 +65,7 @@ All commands are available to every player (permission level 0). On a multiplaye
 | `/bot spawn <name>` | Spawns a bot with your skin at your current position. Must be run by a player. Fails if the name is already taken. |
 | `/bot remove <name>` | Removes the named bot, releases its forced chunk, and removes its fake player. Supports tab-completion. |
 | `/bot list` | Lists all active bots. |
+| `/bot killall` | Removes every bot on the server, including bots that predate this registry (e.g. spawned on 1.0.0) and never showed up in `/bot list`. |
 
 **Example workflow**
 
@@ -71,11 +74,12 @@ All commands are available to every player (permission level 0). On a multiplaye
                         # walk away — the farm keeps producing
 /bot list               # check what's running
 /bot remove ironfarm    # tear it down when you're done
+/bot killall            # or nuke every bot on the server at once
 ```
 
 ## Notes & limitations
 
-- **Bots survive a server restart.** They're normal persisted entities and their forced-chunk ticket is reinstated automatically; on startup the mod re-scans the world and rebuilds `/bot list` from what it finds.
+- **Bots survive a server restart.** They're normal persisted entities and their forced-chunk ticket is reinstated automatically; on startup the mod re-scans the world and rebuilds `/bot list` from what it finds. Bots spawned before 1.1.0 predate this tracking and won't show up in `/bot list` — use `/bot killall` to clear them out if needed.
 - **The bot is stationary.** It won't kill mobs, route items, or trigger anything that needs movement. Pair it with a conventional farm design (water streams, fall damage, hoppers, etc.).
 - **One bot per chunk anchor.** Each bot force-loads its own chunk; spawn them where the farm actually needs presence.
 - Bot names are unique per server session and capped at 16 characters internally for the fake-player profile.
@@ -113,7 +117,7 @@ src/main/java/com/julius/botmod/
 │   ├── BotManager.java           # Spawn/remove logic, chunk forcing, fake-player injection
 │   └── BotEventHandler.java      # Cancels attacks targeting bots
 ├── command/
-│   └── BotCommand.java           # /bot spawn | remove | list
+│   └── BotCommand.java           # /bot spawn | remove | list | killall
 ├── entity/
 │   ├── BotEntity.java            # The bot mob: no AI, invulnerable, stores owner skin
 │   └── ModEntities.java          # Entity type registration

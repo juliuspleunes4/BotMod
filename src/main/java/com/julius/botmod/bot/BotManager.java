@@ -4,8 +4,10 @@ import com.julius.botmod.BotMod;
 import com.julius.botmod.entity.BotEntity;
 import com.julius.botmod.entity.ModEntities;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -47,7 +49,9 @@ public class BotManager {
         bot.setYRot(yRot);
         bot.setOwnerProfile(owner.getGameProfile());
         bot.setBotName(name);
-        bot.setCustomName(Component.literal("[Bot] " + name));
+        bot.setCustomName(Component.literal("[Bot]")
+                .withStyle(ChatFormatting.BLUE, ChatFormatting.BOLD)
+                .append(Component.literal(" " + name)));
         bot.setCustomNameVisible(true);
 
         int cx = BlockPos.containing(pos).getX() >> 4;
@@ -129,5 +133,37 @@ public class BotManager {
 
         activeBots.put(name, new BotEntry(name, bot, spawnSimulator, level, cx, cz));
         BotMod.LOGGER.info("Bot '{}' restored after server restart at ({}, {}, {})", name, pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    /**
+     * Removes every bot, including ones left over from before this registry existed
+     * (e.g. bots spawned on 1.0.0, which have no stored {@code BotName} and were never
+     * re-registered — {@link #reregisterBot} skips those on purpose). Sweeps every level
+     * for leftover {@code BotEntity} instances after clearing the tracked registry.
+     *
+     * @return the number of bots removed
+     */
+    public static int killAll(MinecraftServer server) {
+        int count = 0;
+
+        for (String name : new HashSet<>(activeBots.keySet())) {
+            if (removeBot(name)) {
+                count++;
+            }
+        }
+
+        for (ServerLevel level : server.getAllLevels()) {
+            for (BotEntity bot : level.getEntities(ModEntities.BOT.get(), b -> true)) {
+                if (!bot.isRemoved()) {
+                    BlockPos pos = bot.blockPosition();
+                    level.setChunkForced(pos.getX() >> 4, pos.getZ() >> 4, false);
+                    bot.discard();
+                    count++;
+                    BotMod.LOGGER.info("Orphaned bot at ({}, {}, {}) in {} removed via killall", pos.getX(), pos.getY(), pos.getZ(), level.dimension().location());
+                }
+            }
+        }
+
+        return count;
     }
 }

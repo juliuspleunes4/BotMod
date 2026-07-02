@@ -4,10 +4,12 @@ import com.julius.botmod.bot.BotManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
@@ -46,6 +48,11 @@ public class BotCommand {
                 .then(Commands.literal("list")
                         .executes(ctx -> listBots(ctx.getSource()))
                 )
+
+                // /bot killall
+                .then(Commands.literal("killall")
+                        .executes(ctx -> killAllBots(ctx.getSource()))
+                )
         );
     }
 
@@ -54,7 +61,7 @@ public class BotCommand {
         try {
             player = source.getPlayerOrException();
         } catch (Exception e) {
-            source.sendFailure(Component.literal("/bot spawn can only be executed by a player."));
+            source.sendFailure(formatMessage("/bot spawn can only be executed by a player."));
             return 0;
         }
 
@@ -64,12 +71,12 @@ public class BotCommand {
         boolean success = BotManager.spawnBot(name, level, pos, player.getYRot(), player);
 
         if (success) {
-            source.sendSuccess(() -> Component.literal(
+            source.sendSuccess(() -> formatMessage(
                     "Bot '" + name + "' spawned at " +
                     (int) pos.x + ", " + (int) pos.y + ", " + (int) pos.z + "."
             ), true);
         } else {
-            source.sendFailure(Component.literal("A bot with the name '" + name + "' already exists."));
+            source.sendFailure(formatMessage("A bot with the name '" + name + "' already exists."));
         }
         return success ? 1 : 0;
     }
@@ -78,9 +85,9 @@ public class BotCommand {
         boolean success = BotManager.removeBot(name);
 
         if (success) {
-            source.sendSuccess(() -> Component.literal("Bot '" + name + "' removed."), true);
+            source.sendSuccess(() -> formatMessage("Bot '" + name + "' removed."), true);
         } else {
-            source.sendFailure(Component.literal("No active bot found with the name '" + name + "'."));
+            source.sendFailure(formatMessage("No active bot found with the name '" + name + "'."));
         }
         return success ? 1 : 0;
     }
@@ -89,12 +96,33 @@ public class BotCommand {
         var names = BotManager.getBotNames();
 
         if (names.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("No active bots."), false);
+            source.sendSuccess(() -> formatMessage("No active bots."), false);
         } else {
-            source.sendSuccess(() -> Component.literal(
+            source.sendSuccess(() -> formatMessage(
                     "Active bots (" + names.size() + "): " + String.join(", ", names)
             ), false);
         }
         return 1;
+    }
+
+    private static int killAllBots(CommandSourceStack source) {
+        int count = BotManager.killAll(source.getServer());
+
+        if (count == 0) {
+            source.sendSuccess(() -> formatMessage("No bots to remove."), false);
+        } else {
+            source.sendSuccess(() -> formatMessage(
+                    "Removed " + count + " bot" + (count == 1 ? "" : "s") + "."
+            ), true);
+        }
+        return count;
+    }
+
+    /** Formats a command response as "[BOTMOD] » message" — blue+bold tag, gray separator, white message. */
+    private static MutableComponent formatMessage(String message) {
+        return Component.literal("[BOTMOD]")
+                .withStyle(ChatFormatting.BLUE, ChatFormatting.BOLD)
+                .append(Component.literal(" » ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(message).withStyle(ChatFormatting.WHITE));
     }
 }
