@@ -34,6 +34,7 @@ The bot itself is deliberately inert: no AI, no movement, invulnerable, non-push
 - Bots survive a server restart — they're restored automatically on startup, no need to respawn them
 - `/bot killall` clears every bot in one go, including stray ones left over from before this registry existed
 - Command feedback is styled consistently as `[BOTMOD] » message` in the chat
+- `/bot help` shows a formatted overview of the mod and its commands
 
 ## Requirements
 
@@ -48,10 +49,10 @@ The bot itself is deliberately inert: no AI, no movement, invulnerable, non-push
 
 ## Installation
 
-Download `botmod-1.1.0.jar` from the [latest release](https://github.com/juliuspleunes4/BotMod/releases/latest) and drop it into your `mods/` folder on both the client and server.
+Download `botmod-1.1.1.jar` from the [latest release](https://github.com/juliuspleunes4/BotMod/releases/latest) and drop it into your `mods/` folder on both the client and server.
 
 ```
-.minecraft/mods/botmod-1.1.0.jar
+.minecraft/mods/botmod-1.1.1.jar
 ```
 
 Alternatively, build from source (see [Building](#building-from-source)).
@@ -66,6 +67,7 @@ All commands are available to every player (permission level 0). On a multiplaye
 | `/bot remove <name>` | Removes the named bot, releases its forced chunk, and removes its fake player. Supports tab-completion. |
 | `/bot list` | Lists all active bots. |
 | `/bot killall` | Removes every bot on the server, including bots that predate this registry (e.g. spawned on 1.0.0) and never showed up in `/bot list`. |
+| `/bot help` | Shows a formatted overview of the mod, its version, and its commands. Also shown by running bare `/bot`. |
 
 **Example workflow**
 
@@ -75,6 +77,7 @@ All commands are available to every player (permission level 0). On a multiplaye
 /bot list               # check what's running
 /bot remove ironfarm    # tear it down when you're done
 /bot killall            # or nuke every bot on the server at once
+/bot help               # forgot a command? this lists them all
 ```
 
 ## Notes & limitations
@@ -117,7 +120,7 @@ src/main/java/com/julius/botmod/
 │   ├── BotManager.java           # Spawn/remove logic, chunk forcing, fake-player injection
 │   └── BotEventHandler.java      # Cancels attacks targeting bots
 ├── command/
-│   └── BotCommand.java           # /bot spawn | remove | list | killall
+│   └── BotCommand.java           # /bot spawn | remove | list | killall | help
 ├── entity/
 │   ├── BotEntity.java            # The bot mob: no AI, invulnerable, stores owner skin
 │   └── ModEntities.java          # Entity type registration

@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 public class BotMod {
 
     public static final String MOD_ID = "botmod";
+    public static final String MOD_VERSION = "1.1.1";
     public static final Logger LOGGER = LogManager.getLogger();
 
     public BotMod(IEventBus modEventBus) {
